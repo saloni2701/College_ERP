@@ -1,0 +1,75 @@
+body {
+  background: #f4f7fc;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.header img {
+  height: 110px;
+}
+
+.title-text {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0a3d91;
+  margin-top: 10px;
+}
+
+/* Cards */
+.card-box {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+
+.card-box:hover {
+  transform: scale(1.01);
+}
+
+/* Section heading */
+.section-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: #0a3d91;
+  margin-bottom: 15px;
+}
+
+/* Inputs */
+input {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #d1d1d1;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+/* Buttons */
+.primary-btn {
+  width: 100%;
+  border-radius: 6px;
+  padding: 8px;
+  border: none;
+  background: #0a8dff;
+  color: white;
+  font-weight: 600;
+}
+
+.primary-btn:hover {
+  background: #006edc;
+}
+
+.login-btn {
+  background: #28a745;
+}
+
+.login-btn:hover {
+  background: #1e7d34;
+}
