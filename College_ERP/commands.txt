@@ -1,0 +1,24 @@
+Frontend:
+cd College_ERP/Dashboard/frontend 
+npm install
+npm start
+
+Backend:
+cd College_ERP/Dashboard/backend 
+npm install
+npm start
+
+AI Resume Analyzer:
+cd College_ERP/AI_Resume_Analyzer
+python3.11 -m venv venv
+venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+streamlit run app.py
+
+Face Recognition:
+cd College_ERP/face_recog
+pip install opencv-python face_recognition requests
+python train_faces.py       # Train faces (Sham, Saloni, Aryan)
+python recognize.py         # Start webcam attendance(just for webcam, not the portal)
+python app.py

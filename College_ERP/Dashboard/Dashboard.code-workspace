@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../Dashboard"
+		},
+		{
+			"path": "../AI_Resume_Analyzer"
+		}
+	],
+	"settings": {
+		"python-envs.defaultEnvManager": "ms-python.python:system"
+	}
+}
