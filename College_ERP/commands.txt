@@ -22,3 +22,13 @@ pip install opencv-python face_recognition requests
 python train_faces.py       # Train faces (Sham, Saloni, Aryan)
 python recognize.py         # Start webcam attendance(just for webcam, not the portal)
 python app.py
+
+api_service.py:
+USER_MAP = {
+    "Saloni Chauhan": 1,
+    "Saloni":1
+    "Shambhavi": 2,  
+    "Sham":2
+    "Aryan":3,
+    "Vivek Chauhan":4  
+}

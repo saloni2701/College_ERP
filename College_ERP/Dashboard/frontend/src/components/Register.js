@@ -28,7 +28,7 @@ export default function Register({ onRegister }) {
       setName("");
       setEmail("");
       setPassword("");
-      onRegister();
+      onRegister({ saved: isBackendEnabled });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -92,6 +92,12 @@ export default function Register({ onRegister }) {
       <button type="submit" className="btn-erp btn-erp-block" disabled={loading}>
         {loading ? "Creating account…" : "Create account"}
       </button>
+
+      {!isBackendEnabled && (
+        <p className="note-text">
+          Demo mode: no backend is connected, so accounts are not saved to the database.
+        </p>
+      )}
     </form>
   );
 }

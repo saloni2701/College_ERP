@@ -132,6 +132,11 @@ function describeDbError(err) {
             return `A required column has no default value, so the INSERT fails (${err.sqlMessage}).`;
         case "ER_ACCESS_DENIED_ERROR":
             return "MySQL refused the username/password in .env (DB_USER / DB_PASS).";
+        case "ECONNREFUSED":
+        case "ETIMEDOUT":
+        case "ENOTFOUND":
+            return `Cannot connect to MySQL at ${process.env.DB_HOST || "localhost"}:3306 - it is not running on this machine ` +
+                   "(or DB_HOST in .env is wrong). Start MySQL here, or run this backend on the computer where MySQL runs.";
         default:
             return null;
     }
@@ -329,7 +334,7 @@ async function checkDatabase() {
         console.log("MySQL Connected");
     } catch (err) {
         const hint = describeDbError(err);
-        console.error("Could not reach the database:", hint || err.message);
+        console.error("Could not reach the database:", hint || err.message || err.code || err);
     }
 }
 

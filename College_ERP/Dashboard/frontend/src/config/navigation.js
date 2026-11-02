@@ -30,7 +30,8 @@ export const NAV_GROUPS = [
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 
 // External tools the portal links out to.
+// Override them in .env when the tools run somewhere else (for example a GitHub Codespace).
 export const EXTERNAL_URLS = {
-  attendance: "http://127.0.0.1:5000/",
-  resumeAnalyzer: "http://localhost:8501",
+  attendance: process.env.REACT_APP_ATTENDANCE_URL || "http://127.0.0.1:5000/",
+  resumeAnalyzer: process.env.REACT_APP_RESUME_URL || "http://localhost:8501",
 };

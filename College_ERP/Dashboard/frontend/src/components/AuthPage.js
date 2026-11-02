@@ -7,16 +7,23 @@ import srmLogo from "../assets/srm_logo.png";
 
 export default function AuthPage({ onLogin, theme, onToggleTheme }) {
   const [mode, setMode] = useState("login");
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(null); // { tone, text }
 
   const switchMode = (next) => {
     setMode(next);
-    setNotice("");
+    setNotice(null);
   };
 
-  const handleRegistered = () => {
+  const handleRegistered = ({ saved }) => {
     setMode("login");
-    setNotice("Registration successful. Please sign in to continue.");
+    setNotice(
+      saved
+        ? { tone: "success", text: "Registration successful. Please sign in to continue." }
+        : {
+            tone: "warning",
+            text: "Demo mode: this account was NOT saved, because no backend is connected. Create a .env file with REACT_APP_API_URL (see .env.example) and restart npm start.",
+          }
+    );
   };
 
   return (
@@ -66,8 +73,8 @@ export default function AuthPage({ onLogin, theme, onToggleTheme }) {
           </h2>
 
           {notice && (
-            <div className="form-notice form-notice-success" role="status">
-              {notice}
+            <div className={`form-notice form-notice-${notice.tone}`} role="status">
+              {notice.text}
             </div>
           )}
 

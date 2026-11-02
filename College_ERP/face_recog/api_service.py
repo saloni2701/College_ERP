@@ -22,7 +22,7 @@ def _load_env_file(path):
     """Tiny .env reader so no extra package is needed. Real environment variables win."""
     if not os.path.exists(path):
         return
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:  # utf-8-sig: ignore the BOM Notepad may add
         for line in f:
             line = line.strip()
             if not line or line.startswith("#") or "=" not in line:
@@ -43,24 +43,21 @@ API_KEY = os.environ.get("ATTENDANCE_API_KEY", "")
 CSV_FILE = os.path.join(BASE_DIR, "attendance.csv")
 
 # Name (as stored in encodings.pickle) -> user id in the database `users` table.
-# "Shambhavi" is the name the current encodings.pickle uses for Shambhavi; run
+# "Sham" is the name the current encodings.pickle uses for Shambhavi; run
 # train_faces.py again to switch it to the folder name "Shambhavi".
 USER_MAP = {
-    "Shambhavi Shukla": 1,
-    "Saloni Chauhan": 2,
-    "Aryan": 3,
-    "Priyanshi Jindal": 4,
-    "Sahaj Nagar": 5,
-    "Sanvee Chauhan": 6,
-    "Ganisha": 7,
-    "Vivek Chauhan": 8,
+    "Saloni Chauhan": 1,
+    "Shambhavi": 2,  
+    "Aryan":3,
+    "Vivek Chauhan":4  
 }
 
-RETRY_SECONDS = 10  # wait this long before retrying a failed database save
+RETRY_SECONDS = 10           # retry after connection problems / server errors
+REJECTED_RETRY_SECONDS = 60  # retry after the backend understood but refused (wrong key, unknown user, ...)
 
 
 def mark_api(user_id, source):
-    """Send one attendance record to the backend. Returns (ok, message)."""
+    """Send one attendance record to the backend. Returns (ok, message, retry_after_seconds)."""
     headers = {"x-api-key": API_KEY} if API_KEY else {}
     try:
         res = requests.post(
@@ -70,10 +67,10 @@ def mark_api(user_id, source):
             timeout=5,
         )
     except requests.RequestException as err:
-        return False, f"cannot reach the backend at {API_URL} ({type(err).__name__})"
+        return False, f"cannot reach the backend at {API_URL} ({type(err).__name__})", RETRY_SECONDS
 
     if res.ok:
-        return True, "saved"
+        return True, "saved", 0
 
     try:
         detail = res.json().get("error", res.text[:100])
@@ -81,7 +78,8 @@ def mark_api(user_id, source):
         detail = res.text[:100].strip() or "no details"
         if res.status_code == 404:
             detail += f" - is API_BASE_URL ({API_BASE_URL}) really the Node backend?"
-    return False, f"backend answered {res.status_code}: {detail}"
+    retry_after = REJECTED_RETRY_SECONDS if 400 <= res.status_code < 500 else RETRY_SECONDS
+    return False, f"backend answered {res.status_code}: {detail}", retry_after
 
 
 def mark_csv(name):
@@ -111,6 +109,8 @@ class AttendanceTracker:
         self._csv_day = {}
         self._api_day = {}
         self._last_attempt = {}
+        self._retry_after = {}
+        self._last_error = {}
         self._warned = set()
 
     def handle(self, name, source):
@@ -129,7 +129,7 @@ class AttendanceTracker:
                     if name not in self._warned:
                         self._warned.add(name)
                         print(f"[DB] '{name}' is not in USER_MAP (api_service.py), so nothing is saved to the database.")
-                elif time.time() - self._last_attempt.get(name, 0) >= RETRY_SECONDS:
+                elif time.time() - self._last_attempt.get(name, 0) >= self._retry_after.get(name, 0):
                     self._last_attempt[name] = time.time()
                     send_api = True
 
@@ -141,18 +141,38 @@ class AttendanceTracker:
             else:
                 self._send(name, user_id, source, today)
 
+    def status(self, name):
+        """Database state for one person today: (state, message).
+
+        state is "saved", "pending" (being sent), "error" (last attempt failed; message says why)
+        or "no_user_id" (the name is missing from USER_MAP).
+        """
+        with self._lock:
+            if self._api_day.get(name) == date.today():
+                return "saved", ""
+            if name in self._last_error:
+                return "error", self._last_error[name]
+            if USER_MAP.get(name) is None:
+                return "no_user_id", f"'{name}' is not in USER_MAP (api_service.py)"
+            return "pending", ""
+
     def _send(self, name, user_id, source, day):
-        ok, message = mark_api(user_id, source)
-        if ok:
-            with self._lock:
+        ok, message, retry_after = mark_api(user_id, source)
+        with self._lock:
+            if ok:
                 self._api_day[name] = day
+                self._last_error.pop(name, None)
+            else:
+                self._retry_after[name] = retry_after
+                self._last_error[name] = message
+        if ok:
             print(f"[DB] Attendance saved for {name} (user id {user_id})")
         else:
-            print(f"[DB] NOT saved for {name}: {message}. Will retry.")
+            print(f"[DB] NOT saved for {name}: {message}. Will retry in {retry_after}s.")
 
 
 def mark_attendance(user_id, source="face-system"):
     """Kept for backward compatibility with the old api_service.py."""
-    ok, message = mark_api(user_id, source)
+    ok, message, _ = mark_api(user_id, source)
     print("Attendance marked" if ok else f"Error marking attendance: {message}")
     return ok

@@ -514,6 +514,7 @@ button:focus-visible,
 
 .form-notice-error { background: var(--danger-bg); color: var(--danger); }
 .form-notice-success { background: var(--success-bg); color: var(--success); }
+.form-notice-warning { background: var(--warning-bg); color: var(--warning); }
 
 /* Icon button (theme toggle) */
 .icon-btn {
