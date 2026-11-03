@@ -77,6 +77,7 @@ PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Face Recognition Attendance</title>
+<link rel="icon" type="image/png" href="/logo.png">
 <style>
   body { font-family: system-ui, "Segoe UI", Arial, sans-serif; margin: 24px; max-width: 760px; }
   h1 { font-size: 22px; margin: 0 0 8px; }

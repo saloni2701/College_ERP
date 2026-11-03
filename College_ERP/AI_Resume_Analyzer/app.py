@@ -1,3 +1,4 @@
+import shutil
 import time
 import numpy as np
 import pandas as pd
@@ -5,10 +6,11 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from streamlit_extras.add_vertical_space import add_vertical_space
 from PyPDF2 import PdfReader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from transformers import pipeline
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
@@ -103,8 +105,13 @@ class resume_analyzer:
         reader = PdfReader(pdf)
         text = ""
         for page in reader.pages:
-            if page.extract_text():
-                text += page.extract_text()
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+
+        if not text.strip():
+            st.error("No readable text was found in this PDF. It may be a scanned image - please upload a text-based PDF.")
+            st.stop()
 
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=700,
@@ -166,19 +173,6 @@ class resume_analyzer:
 
     @staticmethod
     def ats_score():
-        pdf = st.file_uploader("Upload Resume", type="pdf")
-        job_description = st.text_area("Enter Job Description")
-        if st.button("Calculate ATS Score"):
-            if pdf and job_description:
-                with st.spinner("Calculating ATS Score..."):
-                    chunks = resume_analyzer.pdf_to_chunks(pdf)
-                    score = calculate_ats_score(chunks, job_description)
-                st.subheader("📊 ATS Score")
-                st.write(f"**{score}%**")
-            else:
-                st.warning("Please upload a resume and enter a job description")
-    @staticmethod
-    def ats_score():
 
         st.subheader("📊 ATS Resume Score")
 
@@ -206,15 +200,27 @@ class resume_analyzer:
 class linkedin_scraper:
 
     def webdriver_setup():
-            
+
+        # Chrome is not installed by default in a Codespace, so look for it first
+        browser = next((path for path in (shutil.which(name) for name in
+                        ('google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser')) if path), None)
+        if browser is None:
+            raise RuntimeError(
+                "Chrome is not installed on this machine, so LinkedIn scraping is unavailable. "
+                "In a Codespace, run:  ./run_codespace.sh --with-browser"
+            )
+
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
+        options.binary_location = browser
+        options.add_argument('--headless=new')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--window-size=1920,1080')
 
-        driver = webdriver.Chrome(options=options)
-        driver.maximize_window()
-        return driver
+        # Use a chromedriver that is already installed; otherwise Selenium downloads a matching one
+        driver_path = shutil.which('chromedriver')
+        service = Service(driver_path) if driver_path else Service()
+        return webdriver.Chrome(service=service, options=options)
 
 
     def get_userinput():
@@ -254,20 +260,26 @@ class linkedin_scraper:
         return link
     
 
-    def open_link(driver, link):
+    def open_link(driver, link, max_attempts=4):
 
-        while True:
-            # Break the Loop if the Element is Found, Indicating the Page Loaded Correctly
+        for attempt in range(max_attempts):
+            # Return as soon as the expected element is found, meaning the page loaded correctly
             try:
                 driver.get(link)
                 driver.implicitly_wait(5)
                 time.sleep(3)
                 driver.find_element(by=By.CSS_SELECTOR, value='span.switcher-tabs__placeholder-text.m-auto')
                 return
-            
-            # Retry Loading the Page
+
+            # Try loading the page again
             except NoSuchElementException:
                 continue
+
+        raise RuntimeError(
+            "The LinkedIn page did not load correctly after several tries. LinkedIn often blocks "
+            "automated visits from cloud servers (such as a Codespace) or asks for a sign-in, so this "
+            "feature may only work when the app runs on your own computer."
+        )
 
 
     def link_open_scrolldown(driver, link, job_count):
@@ -486,7 +498,7 @@ add_vertical_space(2)
 with st.sidebar:
 
     # Sidebar Logo
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", width=220)
     st.markdown(
         "<h3 style='text-align:center;'>AI Resume Analyzer</h3>",
         unsafe_allow_html=True
