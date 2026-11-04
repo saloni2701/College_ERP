@@ -22,9 +22,9 @@ python app_web.py
 api_service.py:
 USER_MAP = {
     "Saloni Chauhan": 1,
-    "Saloni":1
+    "Saloni":1,
     "Shambhavi": 2,  
-    "Sham":2
+    "Sham":2,
     "Aryan":3,
     "Vivek Chauhan":4  
 }

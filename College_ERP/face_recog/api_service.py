@@ -47,7 +47,9 @@ CSV_FILE = os.path.join(BASE_DIR, "attendance.csv")
 # train_faces.py again to switch it to the folder name "Shambhavi".
 USER_MAP = {
     "Saloni Chauhan": 1,
+    "Saloni":1,
     "Shambhavi": 2,  
+    "Sham":2,
     "Aryan":3,
     "Vivek Chauhan":4  
 }

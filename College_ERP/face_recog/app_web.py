@@ -12,7 +12,7 @@ import pickle
 import cv2
 import face_recognition
 import numpy as np
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, send_from_directory
 
 from api_service import API_URL, AttendanceTracker
 
@@ -77,7 +77,7 @@ PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Face Recognition Attendance</title>
-<link rel="icon" type="image/png" href="/logo.png">
+<link rel="icon" type="image/png" href="/static/favicon.png">
 <style>
   body { font-family: system-ui, "Segoe UI", Arial, sans-serif; margin: 24px; max-width: 760px; }
   h1 { font-size: 22px; margin: 0 0 8px; }
@@ -189,6 +189,12 @@ start();
 @app.route("/")
 def home():
     return Response(PAGE, mimetype="text/html")
+
+
+@app.route("/favicon.ico")
+def favicon():
+    # browsers ask for /favicon.ico by default; answer with the same logo
+    return send_from_directory(app.static_folder, "favicon.png", mimetype="image/png")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, send_from_directory
 import cv2
 import face_recognition
 import pickle
@@ -57,10 +57,25 @@ def video():
 
 @app.route("/")
 def home():
-    return """
-    <h1>Face Recognition Attendance</h1>
-    <img src="/video" width="700">
+    return """<!doctype html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <title>Face Recognition Attendance</title>
+      <link rel="icon" type="image/png" href="/static/favicon.png">
+    </head>
+    <body>
+      <h1>Face Recognition Attendance</h1>
+      <img src="/video" width="700">
+    </body>
+    </html>
     """
+
+
+@app.route("/favicon.ico")
+def favicon():
+    # browsers ask for /favicon.ico by default; answer with the same logo
+    return send_from_directory(app.static_folder, "favicon.png", mimetype="image/png")
 
 
 if __name__ == "__main__":
